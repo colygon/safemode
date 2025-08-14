@@ -1,24 +1,17 @@
-import { pgTable, uuid, varchar, timestamp, integer } from 'drizzle-orm/pg-core'
-import { createInsertSchema } from 'drizzle-zod'
-import { z } from 'zod'
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  username: varchar('username', { length: 100 }).unique(),
-  passwordHash: varchar('password_hash', { length: 255 }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-  credits: integer('credits').default(100),
-  subscriptionTier: varchar('subscription_tier', { length: 50 }).default('free')
-})
+export const emailSignups = pgTable("email_signups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
-export const emails = pgTable('emails', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow()
-})
+export const insertEmailSignupSchema = createInsertSchema(emailSignups).pick({
+  email: true,
+});
 
-export const insertEmailSchema = createInsertSchema(emails, {
-  email: (schema) => schema.email.email()
-})
+export type InsertEmailSignup = z.infer<typeof insertEmailSignupSchema>;
+export type EmailSignup = typeof emailSignups.$inferSelect;
